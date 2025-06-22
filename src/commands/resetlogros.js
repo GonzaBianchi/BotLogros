@@ -10,7 +10,12 @@ export default {
     if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
       return interaction.reply({ content: 'Solo administradores pueden usar este comando.', flags: 64 });
     }
-    await Achievement.deleteMany({ guildId: interaction.guildId });
-    return interaction.reply({ content: 'Todos los logros han sido reseteados para este servidor.', flags: 64 });
+    try {
+      await Achievement.deleteMany({ guildId: interaction.guildId });
+      return interaction.reply({ content: 'Todos los logros han sido reseteados para este servidor.', flags: 64 });
+    } catch (err) {
+      console.error('Error en resetlogros:', err);
+      return interaction.reply({ content: 'Ocurrió un error al resetear los logros. Intenta de nuevo más tarde.', flags: 64 });
+    }
   }
 };

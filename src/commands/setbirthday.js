@@ -30,42 +30,47 @@ export default {
     if (!/^\d{2}-\d{2}$/.test(fecha)) {
       return interaction.reply({ content: 'Formato inválido. Usa DD-MM.', flags: 64 });
     }
-    await Birthday.findOneAndUpdate(
-      { userId: interaction.user.id, guildId: interaction.guildId },
-      { birthday: fecha },
-      { upsert: true }
-    );
-    // Logro de cumpleaños
-    let achievement = await Achievement.findOne({ userId: interaction.user.id, guildId: interaction.guildId });
-    let firstTime = false;
-    if (!achievement) {
-      achievement = await Achievement.create({
-        userId: interaction.user.id,
-        guildId: interaction.guildId,
-        achievements: { birthday: true }
-      });
-      firstTime = true;
-    } else if (!achievement.achievements.birthday) {
-      achievement.achievements.birthday = true;
-      await achievement.save();
-      firstTime = true;
-    }
-    // Anunciar logro en canal de logros (solo si es la primera vez)
-    if (firstTime && interaction.guildId === prodServer) {
-      const channel = interaction.guild.channels.cache.get(prodChannel);
-      if (channel) {
-        const imgBuffer = await generateAchievementImage({
-          type: 'birthday',
-          level: 0,
-          title: LOGRO_CUMPLE.title,
-          desc: LOGRO_CUMPLE.description
+    try {
+      await Birthday.findOneAndUpdate(
+        { userId: interaction.user.id, guildId: interaction.guildId },
+        { birthday: fecha },
+        { upsert: true }
+      );
+      // Logro de cumpleaños
+      let achievement = await Achievement.findOne({ userId: interaction.user.id, guildId: interaction.guildId });
+      let firstTime = false;
+      if (!achievement) {
+        achievement = await Achievement.create({
+          userId: interaction.user.id,
+          guildId: interaction.guildId,
+          achievements: { birthday: true }
         });
-        channel.send({
-          content: `¡Felicidades ${interaction.user}! Has desbloqueado un logro.\n¡Consulta tu progreso con /logros!`,
-          files: [{ attachment: imgBuffer, name: 'logro.png' }]
-        });
+        firstTime = true;
+      } else if (!achievement.achievements.birthday) {
+        achievement.achievements.birthday = true;
+        await achievement.save();
+        firstTime = true;
       }
+      // Anunciar logro en canal de logros (solo si es la primera vez)
+      if (firstTime && interaction.guildId === prodServer) {
+        const channel = interaction.guild.channels.cache.get(prodChannel);
+        if (channel) {
+          const imgBuffer = await generateAchievementImage({
+            type: 'birthday',
+            level: 0,
+            title: LOGRO_CUMPLE.title,
+            desc: LOGRO_CUMPLE.description
+          });
+          channel.send({
+            content: `¡Felicidades ${interaction.user}! Has desbloqueado un logro.\n¡Consulta tu progreso con /logros!`,
+            files: [{ attachment: imgBuffer, name: 'logro.png' }]
+          });
+        }
+      }
+      return interaction.reply({ content: `¡Cumpleaños seteado para el ${fecha}!`, flags: 64 });
+    } catch (err) {
+      console.error('Error en setbirthday:', err);
+      return interaction.reply({ content: 'Ocurrió un error al guardar tu cumpleaños o logro. Intenta de nuevo más tarde.', flags: 64 });
     }
-    return interaction.reply({ content: `¡Cumpleaños seteado para el ${fecha}!`, flags: 64 });
   }
 };

@@ -44,21 +44,26 @@ export default {
     if (!logro) {
       return interaction.reply({ content: 'Tipo o nivel de logro inválido.', flags: 64 });
     }
-    const imgBuffer = await generateAchievementImage({
-      type: tipo,
-      level: nivel,
-      title: logro.title,
-      desc: logro.desc || logro.description
-    });
-    const logrosChannel = interaction.guild.channels.cache.get('1269848036545134654');
-    if (logrosChannel) {
-      await logrosChannel.send({
-        content: `¡Felicidades ${user}! Has desbloqueado un logro.\n¡Consulta tu progreso con /logros!`,
-        files: [{ attachment: imgBuffer, name: 'logro.png' }]
+    try {
+      const imgBuffer = await generateAchievementImage({
+        type: tipo,
+        level: nivel,
+        title: logro.title,
+        desc: logro.desc || logro.description
       });
-      return interaction.reply({ content: 'Mensaje de logro enviado al canal de logros.', flags: 64 });
-    } else {
-      return interaction.reply({ content: 'No se encontró el canal de logros.', flags: 64 });
+      const logrosChannel = interaction.guild.channels.cache.get('1269848036545134654');
+      if (logrosChannel) {
+        await logrosChannel.send({
+          content: `¡Felicidades ${user}! Has desbloqueado un logro.\n¡Consulta tu progreso con /logros!`,
+          files: [{ attachment: imgBuffer, name: 'logro.png' }]
+        });
+        return interaction.reply({ content: 'Mensaje de logro enviado al canal de logros.', flags: 64 });
+      } else {
+        return interaction.reply({ content: 'No se encontró el canal de logros.', flags: 64 });
+      }
+    } catch (err) {
+      console.error('Error en testlogro:', err);
+      return interaction.reply({ content: 'Ocurrió un error al simular el logro. Intenta de nuevo más tarde.', flags: 64 });
     }
   }
 };

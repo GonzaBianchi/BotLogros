@@ -36,6 +36,7 @@ export async function generateAchievementImage({ type, level, title, desc }) {
   // Emoji grande
   ctx.font = '48px sans-serif';
   ctx.textAlign = 'left';
+  ctx.fillStyle = '#fff';
   ctx.fillText(EMOJIS[type] || '🏆', 30, 80);
 
   // "¡LOGRO DESBLOQUEADO!"
@@ -43,9 +44,9 @@ export async function generateAchievementImage({ type, level, title, desc }) {
   ctx.fillStyle = '#39FF90';
   ctx.fillText('¡LOGRO DESBLOQUEADO!', 100, 40);
 
-  // Título
+  // Título con color de material según nivel
   ctx.font = 'bold 28px sans-serif';
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = COLORS[level] || COLORS[0];
   ctx.fillText(title, 100, 80);
 
   // Descripción
