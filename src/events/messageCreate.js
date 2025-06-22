@@ -13,15 +13,12 @@ export default {
     // Solo contar mensajes en servidores
     if (!message.guild) return;
 
-    // Buscar o crear registro de logros
-    let achievement = await Achievement.findOne({ userId: message.author.id, guildId: message.guild.id });
-    if (!achievement) {
-      achievement = await Achievement.create({
-        userId: message.author.id,
-        guildId: message.guild.id,
-        achievements: {}
-      });
-    }
+    // Buscar o crear registro de logros de forma atómica
+    let achievement = await Achievement.findOneAndUpdate(
+      { userId: message.author.id, guildId: message.guild.id },
+      { $setOnInsert: { userId: message.author.id, guildId: message.guild.id, achievements: {} } },
+      { upsert: true, new: true }
+    );
     // Sumar mensaje
     achievement.achievements.messages = (achievement.achievements.messages || 0) + 1;
 

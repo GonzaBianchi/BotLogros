@@ -21,16 +21,12 @@ export default {
       const session = voiceStates.get(user.id);
       if (session) {
         const minutes = Math.floor((Date.now() - session.joinTimestamp) / 60000);
-        let achievement = await Achievement.findOne({ userId: user.id, guildId: newState.guild.id });
-        if (!achievement) {
-          achievement = await Achievement.create({
-            userId: user.id,
-            guildId: newState.guild.id,
-            achievements: { voiceMinutes: minutes }
-          });
-        } else {
-          achievement.achievements.voiceMinutes = (achievement.achievements.voiceMinutes || 0) + minutes;
-        }
+        let achievement = await Achievement.findOneAndUpdate(
+          { userId: user.id, guildId: newState.guild.id },
+          { $setOnInsert: { userId: user.id, guildId: newState.guild.id, achievements: { voiceMinutes: 0 } } },
+          { upsert: true, new: true }
+        );
+        achievement.achievements.voiceMinutes = (achievement.achievements.voiceMinutes || 0) + minutes;
         // Revisar si sube de nivel
         const currentLevel = achievement.achievements.voiceLevel || 0;
         const nextLevel = currentLevel < LEVELS.voice.length ? LEVELS.voice[currentLevel] : null;

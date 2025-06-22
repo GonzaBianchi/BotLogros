@@ -17,14 +17,11 @@ export default {
     if (userReactedMessages.has(key)) return;
     userReactedMessages.set(key, true);
 
-    let achievement = await Achievement.findOne({ userId: user.id, guildId: reaction.message.guild.id });
-    if (!achievement) {
-      achievement = await Achievement.create({
-        userId: user.id,
-        guildId: reaction.message.guild.id,
-        achievements: {}
-      });
-    }
+    let achievement = await Achievement.findOneAndUpdate(
+      { userId: user.id, guildId: reaction.message.guild.id },
+      { $setOnInsert: { userId: user.id, guildId: reaction.message.guild.id, achievements: {} } },
+      { upsert: true, new: true }
+    );
     achievement.achievements.reactions = (achievement.achievements.reactions || 0) + 1;
 
     // Revisar si sube de nivel

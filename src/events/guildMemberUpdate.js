@@ -12,16 +12,13 @@ export default {
     if (achievement && achievement.achievements.booster) return;
     // Si el usuario ahora es booster
     if (!oldMember.premiumSince && newMember.premiumSince) {
-      if (!achievement) {
-        achievement = await Achievement.create({
-          userId: newMember.id,
-          guildId: newMember.guild.id,
-          achievements: { booster: true }
-        });
-      } else {
-        achievement.achievements.booster = true;
-        await achievement.save();
-      }
+      achievement = await Achievement.findOneAndUpdate(
+        { userId: newMember.id, guildId: newMember.guild.id },
+        { $setOnInsert: { userId: newMember.id, guildId: newMember.guild.id, achievements: { booster: true } } },
+        { upsert: true, new: true }
+      );
+      achievement.achievements.booster = true;
+      await achievement.save();
       // Anunciar logro
       const logrosChannel = newMember.guild.channels.cache.get('1269848036545134654');
       if (logrosChannel) {
