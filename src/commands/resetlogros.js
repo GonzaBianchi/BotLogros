@@ -7,18 +7,19 @@ export default {
     .setDescription('Resetea todos los logros de todos los usuarios (solo admins)')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
+    await interaction.deferReply();
     if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-      return interaction.reply({ content: 'Solo administradores pueden usar este comando.', flags: 64 });
+      return interaction.editReply({ content: 'Solo administradores pueden usar este comando.' });
     }
     try {
       await Achievement.deleteMany({ guildId: interaction.guildId });
-      return interaction.reply({ content: 'Todos los logros han sido reseteados para este servidor.', flags: 64 });
+      return interaction.editReply({ content: 'Todos los logros han sido reseteados para este servidor.' });
     } catch (err) {
       console.error('Error en resetlogros:', err);
       if (interaction.deferred || interaction.replied) {
-        await interaction.followUp({ content: 'Ocurrió un error al resetear los logros. Intenta de nuevo más tarde.', flags: 64 });
+        await interaction.followUp({ content: 'Ocurrió un error al resetear los logros. Intenta de nuevo más tarde.' });
       } else {
-        await interaction.reply({ content: 'Ocurrió un error al resetear los logros. Intenta de nuevo más tarde.', flags: 64 });
+        await interaction.reply({ content: 'Ocurrió un error al resetear los logros. Intenta de nuevo más tarde.' });
       }
     }
   }

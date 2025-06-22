@@ -36,6 +36,7 @@ export default {
       return interaction.reply({ content: 'Día o mes inválido. Día: 1-31, Mes: 1-12.', flags: 64 });
     }
     const fecha = `${dia.toString().padStart(2, '0')}-${mes.toString().padStart(2, '0')}`;
+    await interaction.deferReply();
     try {
       await Birthday.findOneAndUpdate(
         { userId: interaction.user.id, guildId: interaction.guildId },
@@ -70,13 +71,13 @@ export default {
           });
         }
       }
-      return interaction.reply({ content: `¡Cumpleaños seteado para el ${fecha}!`, flags: 64 });
+      return interaction.editReply({ content: `¡Cumpleaños seteado para el ${fecha}!` });
     } catch (err) {
       console.error('Error en setbirthday:', err);
       if (interaction.deferred || interaction.replied) {
-        await interaction.followUp({ content: 'Ocurrió un error al guardar tu cumpleaños o logro. Intenta de nuevo más tarde.', flags: 64 });
+        await interaction.followUp({ content: 'Ocurrió un error al guardar tu cumpleaños o logro. Intenta de nuevo más tarde.' });
       } else {
-        await interaction.reply({ content: 'Ocurrió un error al guardar tu cumpleaños o logro. Intenta de nuevo más tarde.', flags: 64 });
+        await interaction.reply({ content: 'Ocurrió un error al guardar tu cumpleaños o logro. Intenta de nuevo más tarde.' });
       }
     }
   }

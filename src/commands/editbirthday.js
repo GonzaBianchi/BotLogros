@@ -29,22 +29,23 @@ export default {
       return interaction.reply({ content: 'Día o mes inválido. Día: 1-31, Mes: 1-12.', flags: 64 });
     }
     const fecha = `${dia.toString().padStart(2, '0')}-${mes.toString().padStart(2, '0')}`;
+    await interaction.deferReply();
     try {
       const existing = await Birthday.findOne({ userId: interaction.user.id, guildId: interaction.guildId });
       if (!existing) {
-        return interaction.reply({ content: 'No tenías cumpleaños seteado. Usa /setbirthday primero.', flags: 64 });
+        return interaction.editReply({ content: 'No tenías cumpleaños seteado. Usa /setbirthday primero.' });
       }
       await Birthday.findOneAndUpdate(
         { userId: interaction.user.id, guildId: interaction.guildId },
         { birthday: fecha }
       );
-      return interaction.reply({ content: `¡Cumpleaños actualizado a ${fecha}!`, flags: 64 });
+      return interaction.editReply({ content: `¡Cumpleaños actualizado a ${fecha}!` });
     } catch (err) {
       console.error('Error en editbirthday:', err);
       if (interaction.deferred || interaction.replied) {
-        await interaction.followUp({ content: 'Ocurrió un error al editar tu cumpleaños. Intenta de nuevo más tarde.', flags: 64 });
+        await interaction.followUp({ content: 'Ocurrió un error al editar tu cumpleaños. Intenta de nuevo más tarde.' });
       } else {
-        await interaction.reply({ content: 'Ocurrió un error al editar tu cumpleaños. Intenta de nuevo más tarde.', flags: 64 });
+        await interaction.reply({ content: 'Ocurrió un error al editar tu cumpleaños. Intenta de nuevo más tarde.' });
       }
     }
   }

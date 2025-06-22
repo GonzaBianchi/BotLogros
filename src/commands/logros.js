@@ -27,11 +27,12 @@ export default {
         .setDescription('Usuario a consultar')
         .setRequired(false)),
   async execute(interaction) {
+    await interaction.deferReply();
     try {
       const user = interaction.options.getUser('usuario') || interaction.user;
       const ach = await Achievement.findOne({ userId: user.id, guildId: interaction.guildId });
       if (!ach) {
-        return interaction.reply({ content: `${user} aún no tiene logros registrados.`, flags: 64 });
+        return interaction.editReply({ content: `${user} aún no tiene logros registrados.` });
       }
       let total = 0;
       let completados = 0;
@@ -62,13 +63,13 @@ export default {
       // Porcentaje
       const porcentaje = ((completados / total) * 100).toFixed(1);
       desc += `\nProgreso total: **${porcentaje}%**`;
-      return interaction.reply({ content: `Progreso de logros de ${user} :\n${desc}`, flags: 64 });
+      return interaction.editReply({ content: `Progreso de logros de ${user} :\n${desc}` });
     } catch (err) {
       console.error('Error en logros:', err);
       if (interaction.deferred || interaction.replied) {
-        await interaction.followUp({ content: 'Ocurrió un error al consultar los logros. Intenta de nuevo más tarde.', flags: 64 });
+        await interaction.followUp({ content: 'Ocurrió un error al consultar los logros. Intenta de nuevo más tarde.' });
       } else {
-        await interaction.reply({ content: 'Ocurrió un error al consultar los logros. Intenta de nuevo más tarde.', flags: 64 });
+        await interaction.reply({ content: 'Ocurrió un error al consultar los logros. Intenta de nuevo más tarde.' });
       }
     }
   }

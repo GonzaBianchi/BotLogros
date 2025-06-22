@@ -28,8 +28,9 @@ export default {
         .setDescription('Usuario a mencionar (opcional)'))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
+    await interaction.deferReply();
     if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-      return interaction.reply({ content: 'Solo administradores pueden usar este comando.', flags: 64 });
+      return interaction.editReply({ content: 'Solo administradores pueden usar este comando.' });
     }
     const tipo = interaction.options.getString('tipo');
     let nivel = interaction.options.getInteger('nivel') ?? 0;
@@ -42,7 +43,7 @@ export default {
       logro = LOGROS[tipo]?.[nivel];
     }
     if (!logro) {
-      return interaction.reply({ content: 'Tipo o nivel de logro inválido.', flags: 64 });
+      return interaction.editReply({ content: 'Tipo o nivel de logro inválido.' });
     }
     try {
       const imgBuffer = await generateAchievementImage({
@@ -57,16 +58,16 @@ export default {
           content: `¡Felicidades ${user}! Has desbloqueado un logro.\n¡Consulta tu progreso con /logros!`,
           files: [{ attachment: imgBuffer, name: 'logro.png' }]
         });
-        return interaction.reply({ content: 'Mensaje de logro enviado al canal de logros.', flags: 64 });
+        return interaction.editReply({ content: 'Mensaje de logro enviado al canal de logros.' });
       } else {
-        return interaction.reply({ content: 'No se encontró el canal de logros.', flags: 64 });
+        return interaction.editReply({ content: 'No se encontró el canal de logros.' });
       }
     } catch (err) {
       console.error('Error en testlogro:', err);
       if (interaction.deferred || interaction.replied) {
-        await interaction.followUp({ content: 'Ocurrió un error al simular el logro. Intenta de nuevo más tarde.', flags: 64 });
+        await interaction.followUp({ content: 'Ocurrió un error al simular el logro. Intenta de nuevo más tarde.' });
       } else {
-        await interaction.reply({ content: 'Ocurrió un error al simular el logro. Intenta de nuevo más tarde.', flags: 64 });
+        await interaction.reply({ content: 'Ocurrió un error al simular el logro. Intenta de nuevo más tarde.' });
       }
     }
   }
