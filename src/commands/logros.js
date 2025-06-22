@@ -2,10 +2,10 @@ import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import Achievement from '../models/Achievement.js';
 import { LOGROS, LEVELS } from '../utils/achievements.js';
 
-function getBar(percent, length = 16) {
+function getBar(percent, length = 14) {
   const filled = Math.round(percent * length);
   const empty = length - filled;
-  return `▰`.repeat(filled) + `▱`.repeat(empty) + ` ${Math.round(percent * 100)}%`;
+  return `[${'█'.repeat(filled)}${'░'.repeat(empty)}] ${Math.round(percent * 100)}%`;
 }
 
 export default {
@@ -34,23 +34,29 @@ export default {
       ];
       let total = 0, completados = 0;
       for (const t of tipos) { total += t.max; completados += t.value; }
+      const percentTotal = completados / total;
       // Embed
+      let desc = `Completaste **${completados}** de **${total}** logros totales.\n`;
+      desc += getBar(percentTotal) + '\n';
       const embed = new EmbedBuilder()
         .setTitle(`Logros de ${user.username}`)
         .setColor('#39FF90')
         .setThumbnail(user.displayAvatarURL({ extension: 'png', size: 256 }))
-        .setDescription(`Completaste **${completados}** de **${total}** logros totales.`);
+        .setDescription(desc);
       // Barras y campos
       for (const tipo of tipos) {
-        let progreso = `${tipo.value}/${tipo.max}`;
         let nextTitle = '', nextDesc = '', barra = '', actual = tipo.actual || tipo.value;
         let meta = 1;
         let percent = 0;
+        let nivelActual = tipo.value;
+        let totalLogros = tipo.key === 'birthday' || tipo.key === 'booster' ? 1 : tipo.levels.length;
+        let progresoMeta = '';
         if (tipo.key === 'birthday' || tipo.key === 'booster') {
           nextTitle = LOGROS[tipo.key].title;
           nextDesc = LOGROS[tipo.key].description;
           percent = tipo.value / tipo.max;
           barra = getBar(percent);
+          progresoMeta = tipo.value ? '(1/1)' : '(0/1)';
         } else {
           const nivel = ach.achievements[`${tipo.key}Level`] || 0;
           if (nivel < tipo.levels.length) {
@@ -64,11 +70,11 @@ export default {
           }
           percent = Math.min(actual / meta, 1);
           barra = getBar(percent);
+          progresoMeta = `(**${actual}/${meta}**)`;
         }
         embed.addFields({
-          name: `${tipo.label} (${actual}/${meta})`,
-          value: `**${nextTitle}** → ${nextDesc}\n
-[0m[1m${barra}[0m`,
+          name: `${tipo.label} (${nivelActual}/${totalLogros})`,
+          value: `**${nextTitle}** → ${nextDesc} ${progresoMeta}\n${barra}`,
           inline: false
         });
       }
