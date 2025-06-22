@@ -92,4 +92,21 @@ const servers = [
   }
 })();
 
+// Global error handlers para debug en Render y local
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+});
+
+client.on('error', (err) => {
+  console.error('CLIENT ERROR:', err);
+});
+
+client.on('shardError', (err) => {
+  console.error('SHARD ERROR:', err);
+});
+
 client.login(process.env.TOKEN);
