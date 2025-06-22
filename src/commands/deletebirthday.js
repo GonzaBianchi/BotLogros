@@ -6,16 +6,14 @@ export default {
     .setName('deletebirthday')
     .setDescription('Borra tu cumpleaños guardado'),
   async execute(interaction) {
-    // Producción: solo canal específico, Test: cualquier canal
+    // Producción: solo canal específico
     const prodServer = '752883098059800647';
     const prodChannel = '1269848036545134654';
-    const testServer = '1374115839715835934';
     if (
       (interaction.guildId === prodServer && interaction.channelId !== prodChannel) // Solo canal específico en prod
     ) {
       return interaction.reply({ content: 'Este comando solo se puede usar en el canal autorizado.', flags: 64 });
     }
-    // En test server, cualquier canal
     await interaction.deferReply();
     try {
       const existing = await Birthday.findOne({ userId: interaction.user.id, guildId: interaction.guildId });

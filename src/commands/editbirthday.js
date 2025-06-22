@@ -16,13 +16,11 @@ export default {
   async execute(interaction) {
     const prodServer = '752883098059800647';
     const prodChannel = '1269848036545134654';
-    const testServer = '1374115839715835934';
     if (
       (interaction.guildId === prodServer && interaction.channelId !== prodChannel)
     ) {
       return interaction.reply({ content: 'Este comando solo se puede usar en el canal autorizado.', flags: 64 });
     }
-    // En test server, cualquier canal
     const dia = interaction.options.getInteger('dia');
     const mes = interaction.options.getInteger('mes');
     if (!dia || !mes || dia < 1 || dia > 31 || mes < 1 || mes > 12) {

@@ -75,8 +75,7 @@ for (const file of readdirSync(commandsPath)) {
 }
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 const servers = [
-  '752883098059800647', // Producción
-  '1374115839715835934' // Test
+  '752883098059800647' // Producción
 ];
 (async () => {
   try {
