@@ -1,23 +1,7 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import Achievement from '../models/Achievement.js';
 import { LOGROS, LEVELS } from '../utils/achievements.js';
-import { generateProgressImage } from '../utils/achievementImage.js';
-
-function getProgress(ach, type) {
-  if (type === 'birthday' || type === 'booster') {
-    return ach.achievements[type] ? 1 : 0;
-  }
-  if (type === 'messages' || type === 'reactions' || type === 'voice') {
-    const levels = LEVELS[type];
-    const value = ach.achievements[type] || 0;
-    let level = 0;
-    for (let i = 0; i < levels.length; i++) {
-      if (value >= levels[i]) level = i + 1;
-    }
-    return level / levels.length;
-  }
-  return 0;
-}
+import { generateLogrosEmbedImage } from '../utils/achievementImage.js';
 
 export default {
   data: new SlashCommandBuilder()
@@ -35,38 +19,46 @@ export default {
       if (!ach) {
         return interaction.editReply({ content: `${user} aún no tiene logros registrados.` });
       }
-      let total = 0;
-      let completados = 0;
-      let desc = '';
-      // Cumpleaños
-      total++;
-      if (ach.achievements.birthday) completados++;
-      desc += `🎂 Cumpleaños: ${ach.achievements.birthday ? '✅' : '❌'}\n`;
-      // Booster
-      total++;
-      if (ach.achievements.booster) completados++;
-      desc += `🚀 Booster: ${ach.achievements.booster ? '✅' : '❌'}\n`;
-      // Mensajes
-      total += LEVELS.messages.length;
-      let msgLevel = ach.achievements.messagesLevel || 0;
-      completados += msgLevel;
-      desc += `💬 Mensajes: ${msgLevel}/${LEVELS.messages.length} (${ach.achievements.messages || 0} enviados)\n`;
-      // Reacciones
-      total += LEVELS.reactions.length;
-      let reactLevel = ach.achievements.reactionsLevel || 0;
-      completados += reactLevel;
-      desc += `👍 Reacciones: ${reactLevel}/${LEVELS.reactions.length} (${ach.achievements.reactions || 0} agregadas)\n`;
-      // Voice
-      total += LEVELS.voice.length;
-      let voiceLevel = ach.achievements.voiceLevel || 0;
-      completados += voiceLevel;
-      desc += `🔊 Voz: ${voiceLevel}/${LEVELS.voice.length} (${ach.achievements.voiceMinutes || 0} min)\n`;
-      // Porcentaje
-      const porcentaje = ((completados / total) * 100).toFixed(1);
-      desc += `\nProgreso total: **${porcentaje}%**`;
-      // Generar imagen de barras de progreso
-      const imgBuffer = await generateProgressImage(ach, LEVELS);
-      return interaction.editReply({ content: `Progreso de logros de ${user} :\n${desc}`, files: [{ attachment: imgBuffer, name: 'progreso.png' }] });
+      // Calcular totales
+      const tipos = [
+        { key: 'birthday', label: 'Cumpleaños', max: 1, value: ach.achievements.birthday ? 1 : 0 },
+        { key: 'booster', label: 'Booster', max: 1, value: ach.achievements.booster ? 1 : 0 },
+        { key: 'messages', label: 'Mensajes', max: LEVELS.messages.length, value: ach.achievements.messagesLevel || 0 },
+        { key: 'reactions', label: 'Reacciones', max: LEVELS.reactions.length, value: ach.achievements.reactionsLevel || 0 },
+        { key: 'voice', label: 'Voz', max: LEVELS.voice.length, value: ach.achievements.voiceLevel || 0 }
+      ];
+      let total = 0, completados = 0;
+      for (const t of tipos) { total += t.max; completados += t.value; }
+      // Imagen de barras
+      const imgBuffer = await generateLogrosEmbedImage(ach, LEVELS, LOGROS);
+      // Embed
+      const embed = new EmbedBuilder()
+        .setTitle(`Logros de ${user.username}`)
+        .setColor('#39FF90')
+        .setThumbnail(user.displayAvatarURL({ extension: 'png', size: 256 }))
+        .setDescription(`Completaste **${completados}** de **${total}** logros totales.`)
+        .setImage('attachment://progreso.png');
+      // Agregar campos para cada tipo de logro
+      for (const tipo of tipos) {
+        let progreso = `${tipo.value}/${tipo.max}`;
+        let nextTitle = '';
+        if (tipo.key === 'birthday' || tipo.key === 'booster') {
+          nextTitle = LOGROS[tipo.key].title;
+        } else {
+          const nivel = ach.achievements[`${tipo.key}Level`] || 0;
+          if (nivel < LOGROS[tipo.key].length) {
+            nextTitle = LOGROS[tipo.key][nivel].title;
+          } else {
+            nextTitle = LOGROS[tipo.key][LOGROS[tipo.key].length-1].title;
+          }
+        }
+        embed.addFields({
+          name: `${tipo.label} (${progreso})`,
+          value: `Siguiente: **${nextTitle}**`,
+          inline: false
+        });
+      }
+      return interaction.editReply({ embeds: [embed], files: [{ attachment: imgBuffer, name: 'progreso.png' }] });
     } catch (err) {
       console.error('Error en logros:', err);
       if (interaction.deferred || interaction.replied) {

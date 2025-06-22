@@ -156,3 +156,71 @@ export async function generateProgressImage(ach, LEVELS) {
 
   return canvas.toBuffer('image/png');
 }
+
+// Genera una barra de progreso horizontal bonita
+export function drawProgressBar(ctx, x, y, width, height, percent, color='#39FF90', bgColor='#444', borderColor='#23272A', showPercent=true) {
+  // Fondo
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(x, y, width, height);
+  // Progreso
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, width * percent, height);
+  // Borde
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, width, height);
+  // Porcentaje
+  if (showPercent) {
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${Math.round(percent*100)}%`, x + width/2, y + height/2);
+  }
+}
+
+// Genera una imagen para el embed de logros con barra total y barras de cada tipo
+export async function generateLogrosEmbedImage(ach, LEVELS, LOGROS) {
+  const width = 600;
+  const height = 320;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#23272A';
+  ctx.fillRect(0, 0, width, height);
+
+  // Progreso total
+  const tipos = [
+    { key: 'birthday', label: 'Cumpleaños', max: 1, value: ach.achievements.birthday ? 1 : 0 },
+    { key: 'booster', label: 'Booster', max: 1, value: ach.achievements.booster ? 1 : 0 },
+    { key: 'messages', label: 'Mensajes', max: LEVELS.messages.length, value: ach.achievements.messagesLevel || 0 },
+    { key: 'reactions', label: 'Reacciones', max: LEVELS.reactions.length, value: ach.achievements.reactionsLevel || 0 },
+    { key: 'voice', label: 'Voz', max: LEVELS.voice.length, value: ach.achievements.voiceLevel || 0 }
+  ];
+  let total = 0, completados = 0;
+  for (const t of tipos) { total += t.max; completados += t.value; }
+  const percentTotal = completados / total;
+
+  // Título
+  ctx.font = 'bold 24px sans-serif';
+  ctx.fillStyle = '#39FF90';
+  ctx.fillText('Progreso total de logros', 30, 40);
+
+  // Barra total
+  drawProgressBar(ctx, 30, 60, 540, 28, percentTotal, '#FFD700');
+  ctx.font = '16px sans-serif';
+  ctx.fillStyle = '#fff';
+  ctx.fillText(`${completados}/${total} logros`, 300, 105);
+
+  // Barras individuales
+  let barY = 140;
+  for (const tipo of tipos) {
+    let percent = tipo.value / tipo.max;
+    let color = tipo.key === 'birthday' ? '#50C878' : tipo.key === 'booster' ? '#00BFFF' : '#39FF90';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillStyle = '#b9bbbe';
+    ctx.fillText(tipo.label, 30, barY + 18);
+    drawProgressBar(ctx, 160, barY, 410, 22, percent, color);
+    barY += 40;
+  }
+  return canvas.toBuffer('image/png');
+}
