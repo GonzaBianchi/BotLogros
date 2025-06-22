@@ -1,4 +1,4 @@
-import { createCanvas } from 'canvas';
+import { createCanvas, registerFont } from 'canvas';
 
 const COLORS = [
   '#A9A9A9', // Hierro
@@ -57,15 +57,102 @@ export async function generateAchievementImage({ type, level, title, desc }) {
   ctx.fillStyle = '#39FF90';
   ctx.fillText('¡LOGRO DESBLOQUEADO!', 110, 40);
 
-  // Título con color de material según nivel
-  ctx.font = 'bold 28px sans-serif';
+  // Título (sin emoji, texto más pequeño y ajuste si es largo)
+  let cleanTitle = title.replace(/^[^a-zA-Z0-9]+\s*/, ''); // Quita emoji inicial si lo hay
+  ctx.font = 'bold 22px sans-serif';
   ctx.fillStyle = COLORS[level] || COLORS[0];
-  ctx.fillText(title, 110, 80);
+  let maxTitleWidth = 370;
+  if (ctx.measureText(cleanTitle).width > maxTitleWidth) {
+    // Reduce el tamaño si es muy largo
+    ctx.font = 'bold 18px sans-serif';
+  }
+  ctx.fillText(cleanTitle, 110, 80, maxTitleWidth);
 
-  // Descripción
-  ctx.font = '18px sans-serif';
+  // Descripción (texto más pequeño y ajuste si es largo)
+  ctx.font = '16px sans-serif';
   ctx.fillStyle = '#b9bbbe';
-  ctx.fillText(desc, 110, 110);
+  let maxDescWidth = 370;
+  // Si la descripción es muy larga, la partea en varias líneas
+  let words = desc.split(' ');
+  let line = '';
+  let y = 110;
+  for (let n = 0; n < words.length; n++) {
+    let testLine = line + words[n] + ' ';
+    let metrics = ctx.measureText(testLine);
+    if (metrics.width > maxDescWidth && n > 0) {
+      ctx.fillText(line, 110, y, maxDescWidth);
+      line = words[n] + ' ';
+      y += 20;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line, 110, y, maxDescWidth);
+
+  return canvas.toBuffer('image/png');
+}
+
+// Genera una imagen con barras de progreso para todos los logros y el total
+export async function generateProgressImage(ach, LEVELS) {
+  const width = 520;
+  const height = 270;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#23272A';
+  ctx.fillRect(0, 0, width, height);
+
+  const barX = 40;
+  let barY = 40;
+  const barWidth = 400;
+  const barHeight = 22;
+  const gap = 38;
+
+  // Datos de progreso
+  const tipos = [
+    { key: 'birthday', label: 'Cumpleaños', icon: '🎂', max: 1, value: ach.achievements.birthday ? 1 : 0 },
+    { key: 'booster', label: 'Booster', icon: '🚀', max: 1, value: ach.achievements.booster ? 1 : 0 },
+    { key: 'messages', label: 'Mensajes', icon: '💬', max: LEVELS.messages.length, value: ach.achievements.messagesLevel || 0 },
+    { key: 'reactions', label: 'Reacciones', icon: '👍', max: LEVELS.reactions.length, value: ach.achievements.reactionsLevel || 0 },
+    { key: 'voice', label: 'Voz', icon: '🔊', max: LEVELS.voice.length, value: ach.achievements.voiceLevel || 0 }
+  ];
+  let total = 0, completados = 0;
+
+  // Título
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillStyle = '#39FF90';
+  ctx.fillText('Progreso de logros', 30, 28);
+
+  for (const tipo of tipos) {
+    // Etiqueta
+    ctx.font = '18px sans-serif';
+    ctx.fillStyle = '#b9bbbe';
+    ctx.fillText(`${tipo.icon} ${tipo.label}`, barX, barY + 16);
+    // Barra
+    ctx.fillStyle = '#444';
+    ctx.fillRect(barX + 120, barY, barWidth, barHeight);
+    ctx.fillStyle = '#39FF90';
+    const percent = tipo.value / tipo.max;
+    ctx.fillRect(barX + 120, barY, barWidth * percent, barHeight);
+    // Texto de progreso
+    ctx.font = '16px sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`${tipo.value}/${tipo.max}`, barX + 530 - 60, barY + 16);
+    barY += gap;
+    total += tipo.max;
+    completados += tipo.value;
+  }
+  // Barra total
+  ctx.font = 'bold 18px sans-serif';
+  ctx.fillStyle = '#b9bbbe';
+  ctx.fillText('Total', barX, barY + 16);
+  ctx.fillStyle = '#444';
+  ctx.fillRect(barX + 120, barY, barWidth, barHeight);
+  ctx.fillStyle = '#FFD700';
+  const percentTotal = completados / total;
+  ctx.fillRect(barX + 120, barY, barWidth * percentTotal, barHeight);
+  ctx.font = '16px sans-serif';
+  ctx.fillStyle = '#fff';
+  ctx.fillText(`${completados}/${total}`, barX + 530 - 60, barY + 16);
 
   return canvas.toBuffer('image/png');
 }

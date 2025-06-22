@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import Achievement from '../models/Achievement.js';
 import { LOGROS, LEVELS } from '../utils/achievements.js';
+import { generateProgressImage } from '../utils/achievementImage.js';
 
 function getProgress(ach, type) {
   if (type === 'birthday' || type === 'booster') {
@@ -63,7 +64,9 @@ export default {
       // Porcentaje
       const porcentaje = ((completados / total) * 100).toFixed(1);
       desc += `\nProgreso total: **${porcentaje}%**`;
-      return interaction.editReply({ content: `Progreso de logros de ${user} :\n${desc}` });
+      // Generar imagen de barras de progreso
+      const imgBuffer = await generateProgressImage(ach, LEVELS);
+      return interaction.editReply({ content: `Progreso de logros de ${user} :\n${desc}`, files: [{ attachment: imgBuffer, name: 'progreso.png' }] });
     } catch (err) {
       console.error('Error en logros:', err);
       if (interaction.deferred || interaction.replied) {
