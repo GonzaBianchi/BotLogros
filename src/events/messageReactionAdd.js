@@ -1,5 +1,6 @@
 import Achievement from '../models/Achievement.js';
 import { LOGROS, LEVELS } from '../utils/achievements.js';
+import { generateAchievementImage } from '../utils/achievementImage.js';
 
 const userReactedMessages = new Map(); // userId: Set(messageId)
 
@@ -35,8 +36,15 @@ export default {
       const logro = LOGROS.reactions[currentLevel];
       const logrosChannel = reaction.message.guild.channels.cache.get('1269848036545134654');
       if (logrosChannel) {
+        const imgBuffer = await generateAchievementImage({
+          type: 'reactions',
+          level: currentLevel,
+          title: logro.title,
+          desc: logro.desc
+        });
         logrosChannel.send({
-          content: `**${logro.title}**\n<@${user.id}> ${logro.desc}\n¡Consulta tu progreso con /logros!`
+          content: `¡Felicidades <@${user.id}>! Has desbloqueado un logro.\n¡Consulta tu progreso con /logros!`,
+          files: [{ attachment: imgBuffer, name: 'logro.png' }]
         });
       }
     }

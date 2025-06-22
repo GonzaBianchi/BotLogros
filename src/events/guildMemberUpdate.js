@@ -1,5 +1,6 @@
 import Achievement from '../models/Achievement.js';
 import { LOGROS } from '../utils/achievements.js';
+import { generateAchievementImage } from '../utils/achievementImage.js';
 
 export default {
   name: 'guildMemberUpdate',
@@ -24,8 +25,15 @@ export default {
       // Anunciar logro
       const logrosChannel = newMember.guild.channels.cache.get('1269848036545134654');
       if (logrosChannel) {
+        const imgBuffer = await generateAchievementImage({
+          type: 'booster',
+          level: 0,
+          title: LOGROS.booster.title,
+          desc: LOGROS.booster.description
+        });
         logrosChannel.send({
-          content: `**${LOGROS.booster.title}**\n${newMember} ${LOGROS.booster.description}\n¡Consulta tu progreso con /logros!`
+          content: `¡Felicidades ${newMember}! Has desbloqueado un logro.\n¡Consulta tu progreso con /logros!`,
+          files: [{ attachment: imgBuffer, name: 'logro.png' }]
         });
       }
     }

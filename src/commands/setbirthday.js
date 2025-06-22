@@ -1,10 +1,11 @@
 import { SlashCommandBuilder } from 'discord.js';
 import Birthday from '../models/Birthday.js';
 import Achievement from '../models/Achievement.js';
+import { generateAchievementImage } from '../utils/achievementImage.js';
 
 const LOGRO_CUMPLE = {
-  title: '¡Logro desbloqueado: Cumpleañero! 🎉',
-  description: 'Registró su cumpleaños en el bot.'
+  title: '¡Cumpleañero Oficial! 🎂',
+  description: 'Registró su cumpleaños en el bot. ¡Que empiecen los festejos!'
 };
 
 export default {
@@ -53,8 +54,15 @@ export default {
     if (firstTime && interaction.guildId === prodServer) {
       const channel = interaction.guild.channels.cache.get(prodChannel);
       if (channel) {
+        const imgBuffer = await generateAchievementImage({
+          type: 'birthday',
+          level: 0,
+          title: LOGRO_CUMPLE.title,
+          desc: LOGRO_CUMPLE.description
+        });
         channel.send({
-          content: `**${LOGRO_CUMPLE.title}**\n${interaction.user} ${LOGRO_CUMPLE.description}\n¡Consulta tu progreso con </logros:${interaction.commandId}>!`
+          content: `¡Felicidades ${interaction.user}! Has desbloqueado un logro.\n¡Consulta tu progreso con /logros!`,
+          files: [{ attachment: imgBuffer, name: 'logro.png' }]
         });
       }
     }
