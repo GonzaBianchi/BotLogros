@@ -1,0 +1,19 @@
+{
+  "name": "15---bot-de-dc-logros",
+  "version": "1.0.0",
+  "description": "Este bot utiliza discord.js, mongoose y express para gestionar logros, hitos y cumpleaños de los usuarios.",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.20.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.0"
+  }
+}
