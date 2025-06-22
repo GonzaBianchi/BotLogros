@@ -1,7 +1,12 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import Achievement from '../models/Achievement.js';
 import { LOGROS, LEVELS } from '../utils/achievements.js';
-import { generateLogrosEmbedImage } from '../utils/achievementImage.js';
+
+function getBar(percent, length = 16) {
+  const filled = Math.round(percent * length);
+  const empty = length - filled;
+  return `▰`.repeat(filled) + `▱`.repeat(empty) + ` ${Math.round(percent * 100)}%`;
+}
 
 export default {
   data: new SlashCommandBuilder()
@@ -23,42 +28,51 @@ export default {
       const tipos = [
         { key: 'birthday', label: 'Cumpleaños', max: 1, value: ach.achievements.birthday ? 1 : 0 },
         { key: 'booster', label: 'Booster', max: 1, value: ach.achievements.booster ? 1 : 0 },
-        { key: 'messages', label: 'Mensajes', max: LEVELS.messages.length, value: ach.achievements.messagesLevel || 0 },
-        { key: 'reactions', label: 'Reacciones', max: LEVELS.reactions.length, value: ach.achievements.reactionsLevel || 0 },
-        { key: 'voice', label: 'Voz', max: LEVELS.voice.length, value: ach.achievements.voiceLevel || 0 }
+        { key: 'messages', label: 'Mensajes', max: LEVELS.messages.length, value: ach.achievements.messagesLevel || 0, actual: ach.achievements.messages || 0, levels: LEVELS.messages, logros: LOGROS.messages },
+        { key: 'reactions', label: 'Reacciones', max: LEVELS.reactions.length, value: ach.achievements.reactionsLevel || 0, actual: ach.achievements.reactions || 0, levels: LEVELS.reactions, logros: LOGROS.reactions },
+        { key: 'voice', label: 'Voz', max: LEVELS.voice.length, value: ach.achievements.voiceLevel || 0, actual: ach.achievements.voiceMinutes || 0, levels: LEVELS.voice, logros: LOGROS.voice }
       ];
       let total = 0, completados = 0;
       for (const t of tipos) { total += t.max; completados += t.value; }
-      // Imagen de barras
-      const imgBuffer = await generateLogrosEmbedImage(ach, LEVELS, LOGROS);
       // Embed
       const embed = new EmbedBuilder()
         .setTitle(`Logros de ${user.username}`)
         .setColor('#39FF90')
         .setThumbnail(user.displayAvatarURL({ extension: 'png', size: 256 }))
-        .setDescription(`Completaste **${completados}** de **${total}** logros totales.`)
-        .setImage('attachment://progreso.png');
-      // Agregar campos para cada tipo de logro
+        .setDescription(`Completaste **${completados}** de **${total}** logros totales.`);
+      // Barras y campos
       for (const tipo of tipos) {
         let progreso = `${tipo.value}/${tipo.max}`;
-        let nextTitle = '';
+        let nextTitle = '', nextDesc = '', barra = '', actual = tipo.actual || tipo.value;
+        let meta = 1;
+        let percent = 0;
         if (tipo.key === 'birthday' || tipo.key === 'booster') {
           nextTitle = LOGROS[tipo.key].title;
+          nextDesc = LOGROS[tipo.key].description;
+          percent = tipo.value / tipo.max;
+          barra = getBar(percent);
         } else {
           const nivel = ach.achievements[`${tipo.key}Level`] || 0;
-          if (nivel < LOGROS[tipo.key].length) {
-            nextTitle = LOGROS[tipo.key][nivel].title;
+          if (nivel < tipo.levels.length) {
+            meta = tipo.levels[nivel];
+            nextTitle = tipo.logros[nivel].title;
+            nextDesc = tipo.logros[nivel].desc;
           } else {
-            nextTitle = LOGROS[tipo.key][LOGROS[tipo.key].length-1].title;
+            meta = tipo.levels[tipo.levels.length-1];
+            nextTitle = tipo.logros[tipo.logros.length-1].title;
+            nextDesc = tipo.logros[tipo.logros.length-1].desc;
           }
+          percent = Math.min(actual / meta, 1);
+          barra = getBar(percent);
         }
         embed.addFields({
-          name: `${tipo.label} (${progreso})`,
-          value: `Siguiente: **${nextTitle}**`,
+          name: `${tipo.label} (${actual}/${meta})`,
+          value: `**${nextTitle}** → ${nextDesc}\n
+[0m[1m${barra}[0m`,
           inline: false
         });
       }
-      return interaction.editReply({ embeds: [embed], files: [{ attachment: imgBuffer, name: 'progreso.png' }] });
+      return interaction.editReply({ embeds: [embed] });
     } catch (err) {
       console.error('Error en logros:', err);
       if (interaction.deferred || interaction.replied) {
