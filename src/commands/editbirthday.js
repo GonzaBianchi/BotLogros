@@ -4,10 +4,14 @@ import Birthday from '../models/Birthday.js';
 export default {
   data: new SlashCommandBuilder()
     .setName('editbirthday')
-    .setDescription('Edita tu cumpleaños (formato: DD-MM)')
-    .addStringOption(option =>
-      option.setName('fecha')
-        .setDescription('Nuevo cumpleaños (DD-MM)')
+    .setDescription('Edita tu cumpleaños (día y mes)')
+    .addIntegerOption(option =>
+      option.setName('dia')
+        .setDescription('Nuevo día de cumpleaños (1-31)')
+        .setRequired(true))
+    .addIntegerOption(option =>
+      option.setName('mes')
+        .setDescription('Nuevo mes de cumpleaños (1-12)')
         .setRequired(true)),
   async execute(interaction) {
     const prodServer = '752883098059800647';
@@ -19,18 +23,21 @@ export default {
       return interaction.reply({ content: 'Este comando solo se puede usar en el canal autorizado.', flags: 64 });
     }
     // En test server, cualquier canal
-    const fecha = interaction.options.getString('fecha');
-    if (!/^\d{2}-\d{2}$/.test(fecha)) {
-      return interaction.reply({ content: 'Formato inválido. Usa DD-MM.', flags: 64 });
+    const dia = interaction.options.getInteger('dia');
+    const mes = interaction.options.getInteger('mes');
+    if (!dia || !mes || dia < 1 || dia > 31 || mes < 1 || mes > 12) {
+      return interaction.reply({ content: 'Día o mes inválido. Día: 1-31, Mes: 1-12.', flags: 64 });
     }
+    const fecha = `${dia.toString().padStart(2, '0')}-${mes.toString().padStart(2, '0')}`;
     try {
-      const updated = await Birthday.findOneAndUpdate(
+      const existing = await Birthday.findOne({ userId: interaction.user.id, guildId: interaction.guildId });
+      if (!existing) {
+        return interaction.reply({ content: 'No tenías cumpleaños seteado. Usa /setbirthday primero.', flags: 64 });
+      }
+      await Birthday.findOneAndUpdate(
         { userId: interaction.user.id, guildId: interaction.guildId },
         { birthday: fecha }
       );
-      if (!updated) {
-        return interaction.reply({ content: 'No tenías cumpleaños seteado. Usa /setbirthday primero.', flags: 64 });
-      }
       return interaction.reply({ content: `¡Cumpleaños actualizado a ${fecha}!`, flags: 64 });
     } catch (err) {
       console.error('Error en editbirthday:', err);

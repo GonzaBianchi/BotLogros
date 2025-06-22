@@ -17,10 +17,11 @@ export default {
     }
     // En test server, cualquier canal
     try {
-      const deleted = await Birthday.findOneAndDelete({ userId: interaction.user.id, guildId: interaction.guildId });
-      if (!deleted) {
+      const existing = await Birthday.findOne({ userId: interaction.user.id, guildId: interaction.guildId });
+      if (!existing) {
         return interaction.reply({ content: 'No tenías cumpleaños guardado.', flags: 64 });
       }
+      await Birthday.findOneAndDelete({ userId: interaction.user.id, guildId: interaction.guildId });
       return interaction.reply({ content: '¡Cumpleaños borrado!', flags: 64 });
     } catch (err) {
       console.error('Error en deletebirthday:', err);
