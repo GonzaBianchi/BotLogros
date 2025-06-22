@@ -63,7 +63,11 @@ export default {
       }
     } catch (err) {
       console.error('Error en testlogro:', err);
-      return interaction.reply({ content: 'Ocurrió un error al simular el logro. Intenta de nuevo más tarde.', flags: 64 });
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({ content: 'Ocurrió un error al simular el logro. Intenta de nuevo más tarde.', flags: 64 });
+      } else {
+        await interaction.reply({ content: 'Ocurrió un error al simular el logro. Intenta de nuevo más tarde.', flags: 64 });
+      }
     }
   }
 };

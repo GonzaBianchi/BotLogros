@@ -27,40 +27,49 @@ export default {
         .setDescription('Usuario a consultar')
         .setRequired(false)),
   async execute(interaction) {
-    const user = interaction.options.getUser('usuario') || interaction.user;
-    const ach = await Achievement.findOne({ userId: user.id, guildId: interaction.guildId });
-    if (!ach) {
-      return interaction.reply({ content: `${user} aún no tiene logros registrados.`, flags: 64 });
+    try {
+      const user = interaction.options.getUser('usuario') || interaction.user;
+      const ach = await Achievement.findOne({ userId: user.id, guildId: interaction.guildId });
+      if (!ach) {
+        return interaction.reply({ content: `${user} aún no tiene logros registrados.`, flags: 64 });
+      }
+      let total = 0;
+      let completados = 0;
+      let desc = '';
+      // Cumpleaños
+      total++;
+      if (ach.achievements.birthday) completados++;
+      desc += `🎂 Cumpleaños: ${ach.achievements.birthday ? '✅' : '❌'}\n`;
+      // Booster
+      total++;
+      if (ach.achievements.booster) completados++;
+      desc += `🚀 Booster: ${ach.achievements.booster ? '✅' : '❌'}\n`;
+      // Mensajes
+      total += LEVELS.messages.length;
+      let msgLevel = ach.achievements.messagesLevel || 0;
+      completados += msgLevel;
+      desc += `💬 Mensajes: ${msgLevel}/${LEVELS.messages.length} (${ach.achievements.messages || 0} enviados)\n`;
+      // Reacciones
+      total += LEVELS.reactions.length;
+      let reactLevel = ach.achievements.reactionsLevel || 0;
+      completados += reactLevel;
+      desc += `👍 Reacciones: ${reactLevel}/${LEVELS.reactions.length} (${ach.achievements.reactions || 0} agregadas)\n`;
+      // Voice
+      total += LEVELS.voice.length;
+      let voiceLevel = ach.achievements.voiceLevel || 0;
+      completados += voiceLevel;
+      desc += `🔊 Voz: ${voiceLevel}/${LEVELS.voice.length} (${ach.achievements.voiceMinutes || 0} min)\n`;
+      // Porcentaje
+      const porcentaje = ((completados / total) * 100).toFixed(1);
+      desc += `\nProgreso total: **${porcentaje}%**`;
+      return interaction.reply({ content: `Progreso de logros de ${user} :\n${desc}`, flags: 64 });
+    } catch (err) {
+      console.error('Error en logros:', err);
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({ content: 'Ocurrió un error al consultar los logros. Intenta de nuevo más tarde.', flags: 64 });
+      } else {
+        await interaction.reply({ content: 'Ocurrió un error al consultar los logros. Intenta de nuevo más tarde.', flags: 64 });
+      }
     }
-    let total = 0;
-    let completados = 0;
-    let desc = '';
-    // Cumpleaños
-    total++;
-    if (ach.achievements.birthday) completados++;
-    desc += `🎂 Cumpleaños: ${ach.achievements.birthday ? '✅' : '❌'}\n`;
-    // Booster
-    total++;
-    if (ach.achievements.booster) completados++;
-    desc += `🚀 Booster: ${ach.achievements.booster ? '✅' : '❌'}\n`;
-    // Mensajes
-    total += LEVELS.messages.length;
-    let msgLevel = ach.achievements.messagesLevel || 0;
-    completados += msgLevel;
-    desc += `💬 Mensajes: ${msgLevel}/${LEVELS.messages.length} (${ach.achievements.messages || 0} enviados)\n`;
-    // Reacciones
-    total += LEVELS.reactions.length;
-    let reactLevel = ach.achievements.reactionsLevel || 0;
-    completados += reactLevel;
-    desc += `👍 Reacciones: ${reactLevel}/${LEVELS.reactions.length} (${ach.achievements.reactions || 0} agregadas)\n`;
-    // Voice
-    total += LEVELS.voice.length;
-    let voiceLevel = ach.achievements.voiceLevel || 0;
-    completados += voiceLevel;
-    desc += `🔊 Voz: ${voiceLevel}/${LEVELS.voice.length} (${ach.achievements.voiceMinutes || 0} min)\n`;
-    // Porcentaje
-    const porcentaje = ((completados / total) * 100).toFixed(1);
-    desc += `\nProgreso total: **${porcentaje}%**`;
-    return interaction.reply({ content: `Progreso de logros de ${user} :\n${desc}`, flags: 64 });
   }
 };

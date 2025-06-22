@@ -16,10 +16,19 @@ export default {
       return interaction.reply({ content: 'Este comando solo se puede usar en el canal autorizado.', flags: 64 });
     }
     // En test server, cualquier canal
-    const deleted = await Birthday.findOneAndDelete({ userId: interaction.user.id, guildId: interaction.guildId });
-    if (!deleted) {
-      return interaction.reply({ content: 'No tenías cumpleaños guardado.', flags: 64 });
+    try {
+      const deleted = await Birthday.findOneAndDelete({ userId: interaction.user.id, guildId: interaction.guildId });
+      if (!deleted) {
+        return interaction.reply({ content: 'No tenías cumpleaños guardado.', flags: 64 });
+      }
+      return interaction.reply({ content: '¡Cumpleaños borrado!', flags: 64 });
+    } catch (err) {
+      console.error('Error en deletebirthday:', err);
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({ content: 'Ocurrió un error al borrar tu cumpleaños. Intenta de nuevo más tarde.', flags: 64 });
+      } else {
+        await interaction.reply({ content: 'Ocurrió un error al borrar tu cumpleaños. Intenta de nuevo más tarde.', flags: 64 });
+      }
     }
-    return interaction.reply({ content: '¡Cumpleaños borrado!', flags: 64 });
   }
 };

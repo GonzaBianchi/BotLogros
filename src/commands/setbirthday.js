@@ -37,16 +37,13 @@ export default {
         { upsert: true }
       );
       // Logro de cumpleaños
-      let achievement = await Achievement.findOne({ userId: interaction.user.id, guildId: interaction.guildId });
+      let achievement = await Achievement.findOneAndUpdate(
+        { userId: interaction.user.id, guildId: interaction.guildId },
+        { $setOnInsert: { userId: interaction.user.id, guildId: interaction.guildId, achievements: { birthday: true } } },
+        { upsert: true, new: true }
+      );
       let firstTime = false;
-      if (!achievement) {
-        achievement = await Achievement.create({
-          userId: interaction.user.id,
-          guildId: interaction.guildId,
-          achievements: { birthday: true }
-        });
-        firstTime = true;
-      } else if (!achievement.achievements.birthday) {
+      if (!achievement.achievements.birthday) {
         achievement.achievements.birthday = true;
         await achievement.save();
         firstTime = true;
@@ -70,7 +67,11 @@ export default {
       return interaction.reply({ content: `¡Cumpleaños seteado para el ${fecha}!`, flags: 64 });
     } catch (err) {
       console.error('Error en setbirthday:', err);
-      return interaction.reply({ content: 'Ocurrió un error al guardar tu cumpleaños o logro. Intenta de nuevo más tarde.', flags: 64 });
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({ content: 'Ocurrió un error al guardar tu cumpleaños o logro. Intenta de nuevo más tarde.', flags: 64 });
+      } else {
+        await interaction.reply({ content: 'Ocurrió un error al guardar tu cumpleaños o logro. Intenta de nuevo más tarde.', flags: 64 });
+      }
     }
   }
 };

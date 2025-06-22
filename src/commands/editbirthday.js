@@ -23,13 +23,22 @@ export default {
     if (!/^\d{2}-\d{2}$/.test(fecha)) {
       return interaction.reply({ content: 'Formato inválido. Usa DD-MM.', flags: 64 });
     }
-    const updated = await Birthday.findOneAndUpdate(
-      { userId: interaction.user.id, guildId: interaction.guildId },
-      { birthday: fecha }
-    );
-    if (!updated) {
-      return interaction.reply({ content: 'No tenías cumpleaños seteado. Usa /setbirthday primero.', flags: 64 });
+    try {
+      const updated = await Birthday.findOneAndUpdate(
+        { userId: interaction.user.id, guildId: interaction.guildId },
+        { birthday: fecha }
+      );
+      if (!updated) {
+        return interaction.reply({ content: 'No tenías cumpleaños seteado. Usa /setbirthday primero.', flags: 64 });
+      }
+      return interaction.reply({ content: `¡Cumpleaños actualizado a ${fecha}!`, flags: 64 });
+    } catch (err) {
+      console.error('Error en editbirthday:', err);
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({ content: 'Ocurrió un error al editar tu cumpleaños. Intenta de nuevo más tarde.', flags: 64 });
+      } else {
+        await interaction.reply({ content: 'Ocurrió un error al editar tu cumpleaños. Intenta de nuevo más tarde.', flags: 64 });
+      }
     }
-    return interaction.reply({ content: `¡Cumpleaños actualizado a ${fecha}!`, flags: 64 });
   }
 };
