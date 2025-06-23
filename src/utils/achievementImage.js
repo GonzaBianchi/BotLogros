@@ -1,4 +1,4 @@
-import { createCanvas, registerFont } from 'canvas';
+import { createCanvas, loadImage } from 'canvas';
 
 const COLORS = [
   '#A9A9A9', // Hierro
@@ -16,20 +16,23 @@ export async function generateAchievementImage({ type, level, title, desc }) {
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
 
-  // Fondo
-  ctx.fillStyle = '#23272A';
-  ctx.fillRect(0, 0, width, height);
+  // Fondo personalizado (ajusta la ruta a tu imagen de fondo)
+  try {
+    const bgImg = await loadImage('e:/Gonza/3 - Proyectos/15 - Bot de Dc Logros/src/utils/banner-bg.jpg');
+    ctx.drawImage(bgImg, 0, 0, width, height);
+  } catch (e) {
+    // Si no se encuentra la imagen, usa fondo por defecto
+    ctx.fillStyle = '#23272A';
+    ctx.fillRect(0, 0, width, height);
+  }
 
-  // Borde de color según nivel
-  ctx.strokeStyle = COLORS[level] || COLORS[0];
-  ctx.lineWidth = 6;
-  ctx.strokeRect(3, 3, width - 6, height - 6);
-
-  // Cuadrado con puntas redondeadas y número de logro
+  // Cuadrado con doble borde (sin relleno)
   const squareX = 30;
-  const squareY = 40;
+  const squareY = 45;
   const squareSize = 60;
   const radius = 16;
+  ctx.save();
+  // Borde exterior
   ctx.beginPath();
   ctx.moveTo(squareX + radius, squareY);
   ctx.lineTo(squareX + squareSize - radius, squareY);
@@ -41,53 +44,57 @@ export async function generateAchievementImage({ type, level, title, desc }) {
   ctx.lineTo(squareX, squareY + radius);
   ctx.quadraticCurveTo(squareX, squareY, squareX + radius, squareY);
   ctx.closePath();
-  ctx.fillStyle = COLORS[level] || COLORS[0];
-  ctx.fill();
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = COLORS[level] || COLORS[0];
+  ctx.stroke();
+  // Borde interior
+  ctx.beginPath();
+  const innerPad = 6;
+  ctx.moveTo(squareX + radius + innerPad, squareY + innerPad);
+  ctx.lineTo(squareX + squareSize - radius - innerPad, squareY + innerPad);
+  ctx.quadraticCurveTo(squareX + squareSize - innerPad, squareY + innerPad, squareX + squareSize - innerPad, squareY + radius + innerPad);
+  ctx.lineTo(squareX + squareSize - innerPad, squareY + squareSize - radius - innerPad);
+  ctx.quadraticCurveTo(squareX + squareSize - innerPad, squareY + squareSize - innerPad, squareX + squareSize - radius - innerPad, squareY + squareSize - innerPad);
+  ctx.lineTo(squareX + radius + innerPad, squareY + squareSize - innerPad);
+  ctx.quadraticCurveTo(squareX + innerPad, squareY + squareSize - innerPad, squareX + innerPad, squareY + squareSize - radius - innerPad);
+  ctx.lineTo(squareX + innerPad, squareY + radius + innerPad);
+  ctx.quadraticCurveTo(squareX + innerPad, squareY + innerPad, squareX + radius + innerPad, squareY + innerPad);
+  ctx.closePath();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = COLORS[level] || COLORS[0];
+  ctx.stroke();
+  ctx.restore();
 
-  // Número de logro dentro del cuadrado
+  // Número de logro en el centro, color según nivel
   ctx.font = 'bold 32px sans-serif';
-  ctx.fillStyle = '#23272A';
+  ctx.fillStyle = COLORS[level] || COLORS[0];
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText((level + 1).toString(), squareX + squareSize / 2, squareY + squareSize / 2);
 
-  // "¡LOGRO DESBLOQUEADO!"
-  ctx.font = 'bold 18px sans-serif';
+  // Bloque de texto centrado verticalmente y más junto
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#39FF90';
-  ctx.fillText('¡LOGRO DESBLOQUEADO!', 110, 40);
-
-  // Título (sin emoji, texto más pequeño y ajuste si es largo)
-  let cleanTitle = title.replace(/^[^a-zA-Z0-9]+\s*/, ''); // Quita emoji inicial si lo hay
-  ctx.font = 'bold 22px sans-serif';
-  ctx.fillStyle = COLORS[level] || COLORS[0];
-  let maxTitleWidth = 370;
-  if (ctx.measureText(cleanTitle).width > maxTitleWidth) {
-    // Reduce el tamaño si es muy largo
-    ctx.font = 'bold 18px sans-serif';
+  // Calcula el alto total del bloque de texto
+  const blockLines = [
+    { text: '¡LOGRO DESBLOQUEADO!', font: 'bold 18px sans-serif', color: '#39FF90' },
+    { text: title.replace(/^[^a-zA-Z0-9]+\s*/, ''), font: 'bold 22px sans-serif', color: COLORS[level] || COLORS[0] },
+    { text: desc, font: '16px sans-serif', color: '#b9bbbe' }
+  ];
+  let blockHeight = 0;
+  for (const line of blockLines) {
+    ctx.font = line.font;
+    blockHeight += 26; // Espaciado entre líneas reducido
   }
-  ctx.fillText(cleanTitle, 110, 80, maxTitleWidth);
+  const blockStartY = (height - blockHeight) / 2 + 8;
 
-  // Descripción (texto más pequeño y ajuste si es largo)
-  ctx.font = '16px sans-serif';
-  ctx.fillStyle = '#b9bbbe';
-  let maxDescWidth = 370;
-  // Si la descripción es muy larga, la partea en varias líneas
-  let words = desc.split(' ');
-  let line = '';
-  let y = 110;
-  for (let n = 0; n < words.length; n++) {
-    let testLine = line + words[n] + ' ';
-    let metrics = ctx.measureText(testLine);
-    if (metrics.width > maxDescWidth && n > 0) {
-      ctx.fillText(line, 110, y, maxDescWidth);
-      line = words[n] + ' ';
-      y += 20;
-    } else {
-      line = testLine;
-    }
+  // Dibuja el bloque de texto
+  let y = blockStartY;
+  for (const line of blockLines) {
+    ctx.font = line.font;
+    ctx.fillStyle = line.color;
+    ctx.fillText(line.text, 110, y, 370);
+    y += 26;
   }
-  ctx.fillText(line, 110, y, maxDescWidth);
 
   return canvas.toBuffer('image/png');
 }
