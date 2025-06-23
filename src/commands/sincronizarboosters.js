@@ -13,9 +13,12 @@ export default {
     await interaction.deferReply({ ephemeral: true });
     const boosterRoleId = '1216095868365705317';
     const guild = interaction.guild;
+    await guild.members.fetch(); // Asegura que todos los miembros estén en cache
     const boosterRole = guild.roles.cache.get(boosterRoleId);
     if (!boosterRole) return interaction.editReply('No se encontró el rol de booster.');
+    console.log(`[sincronizarboosters] Total miembros con rol booster:`, boosterRole.members.size);
     let count = 0;
+    let yaTenian = 0;
     for (const member of boosterRole.members.values()) {
       let ach = await Achievement.findOneAndUpdate(
         { userId: member.id, guildId: guild.id },
@@ -42,8 +45,13 @@ export default {
             files: [{ attachment: imgBuffer, name: 'logro.png' }]
           });
         }
+        console.log(`[sincronizarboosters] Logro otorgado a: ${member.user?.tag || member.id}`);
+      } else {
+        yaTenian++;
+        console.log(`[sincronizarboosters] Ya tenía el logro: ${member.user?.tag || member.id}`);
       }
     }
-    return interaction.editReply(`Se otorgó el logro de booster a ${count} usuarios retroactivamente.`);
+    console.log(`[sincronizarboosters] Otorgados: ${count}, Ya tenían: ${yaTenian}`);
+    return interaction.editReply(`Se otorgó el logro de booster a ${count} usuarios retroactivamente. (${yaTenian} ya lo tenían)`);
   }
 };
