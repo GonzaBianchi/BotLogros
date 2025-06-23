@@ -20,6 +20,17 @@ export async function generateAchievementImage({ type, level, title, desc }) {
   try {
     const bgImg = await loadImage('src/assets/banner.jpg');
     ctx.drawImage(bgImg, 0, 0, width, height);
+    // Aplica un blur y oscurece para mejorar contraste
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = '#23272A';
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalAlpha = 1.0;
+    // Simula blur: dibuja el fondo varias veces con opacidad baja y desplazamiento
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dy = -2; dy <= 2; dy++) {
+        if (dx !== 0 || dy !== 0) ctx.drawImage(bgImg, dx, dy, width, height);
+      }
+    }
   } catch (e) {
     // Si no se encuentra la imagen, usa fondo por defecto
     ctx.fillStyle = '#23272A';
