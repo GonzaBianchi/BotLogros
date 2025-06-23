@@ -18,7 +18,7 @@ export async function generateAchievementImage({ type, level, title, desc }) {
 
   // Fondo personalizado (ajusta la ruta a tu imagen de fondo)
   try {
-    const bgImg = await loadImage('e:/Gonza/3 - Proyectos/15 - Bot de Dc Logros/src/utils/banner-bg.jpg');
+    const bgImg = await loadImage('src/assets/banner.jpg');
     ctx.drawImage(bgImg, 0, 0, width, height);
   } catch (e) {
     // Si no se encuentra la imagen, usa fondo por defecto
