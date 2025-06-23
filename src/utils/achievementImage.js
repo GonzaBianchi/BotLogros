@@ -96,6 +96,13 @@ export async function generateAchievementImage({ type, level, title, desc }) {
     y += 26;
   }
 
+  // Borde de color según nivel (alrededor de toda la imagen)
+  ctx.save();
+  ctx.strokeStyle = COLORS[level] || COLORS[0];
+  ctx.lineWidth = 6;
+  ctx.strokeRect(3, 3, width - 6, height - 6);
+  ctx.restore();
+
   return canvas.toBuffer('image/png');
 }
 
