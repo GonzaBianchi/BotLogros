@@ -87,6 +87,35 @@ export default {
             });
           }
         }
+        // --- FELICITACIÓN POR 100% DE LOGROS ---
+        const achData = achievement.achievements;
+        const allCompleted = achData.birthday && achData.booster &&
+          (achData.messagesLevel >= LEVELS.messages.length) &&
+          (achData.reactionsLevel >= LEVELS.reactions.length) &&
+          (achData.voiceLevel >= LEVELS.voice.length);
+        if (allCompleted) {
+          const already = await Achievement.countDocuments({
+            'achievements.birthday': true,
+            'achievements.booster': true,
+            'achievements.messagesLevel': { $gte: LEVELS.messages.length },
+            'achievements.reactionsLevel': { $gte: LEVELS.reactions.length },
+            'achievements.voiceLevel': { $gte: LEVELS.voice.length }
+          });
+          if (already === 1) {
+            const premioChannel = newState.guild.channels.cache.get('752883098059800650');
+            if (premioChannel) {
+              await premioChannel.send({
+                content: `🎉 ¡<@${user.id}> es la PRIMERA persona en completar el 100% de TODOS los logros!\nPor favor, ve al canal <#1382508364772151349> para reclamar tu premio. <@&1386701159279890584>`
+              });
+            }
+            // Dar rol especial
+            const role = newState.guild.roles.cache.get('1386701159279890584');
+            const member = newState.guild.members.cache.get(user.id);
+            if (role && member && !member.roles.cache.has(role.id)) {
+              await member.roles.add(role, 'Completó todos los logros');
+            }
+          }
+        }
         await achievement.save();
         voiceStates.delete(user.id);
       }
