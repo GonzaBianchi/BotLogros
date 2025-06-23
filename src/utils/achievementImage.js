@@ -25,27 +25,25 @@ export async function generateAchievementImage({ type, level, title, desc }) {
     ctx.fillRect(0, 0, width, height);
   }
 
-  // --- RECTÁNGULO INTERIOR CON BLUR Y OSCURECIDO ---
-  // Calcula el área del bloque de texto
-  const blockLines = [
-    { text: '¡LOGRO DESBLOQUEADO!', font: 'bold 18px sans-serif', color: '#39FF90' },
-    { text: title.replace(/^[^a-zA-Z0-9]+\s*/, ''), font: 'bold 22px sans-serif', color: COLORS[level] || COLORS[0] },
-    { text: desc, font: '16px sans-serif', color: '#b9bbbe' }
-  ];
-  let blockHeight = 0;
-  for (const line of blockLines) {
-    ctx.font = line.font;
-    blockHeight += 26;
-  }
-  const blockStartY = (height - blockHeight) / 2 + 8;
-  const blockRectY = blockStartY - 18;
-  const blockRectHeight = blockHeight + 36;
-  // Dibuja el rectángulo interior con blur
+  // --- RECTÁNGULO OSCURO CON BLUR QUE CUBRE CASI TODA LA IMAGEN (BORDES REDONDEADOS) ---
   ctx.save();
   ctx.globalAlpha = 0.7;
   ctx.filter = 'blur(6px)';
+  const pad = 18;
+  const rectRadius = 22;
+  ctx.beginPath();
+  ctx.moveTo(pad + rectRadius, pad);
+  ctx.lineTo(width - pad - rectRadius, pad);
+  ctx.quadraticCurveTo(width - pad, pad, width - pad, pad + rectRadius);
+  ctx.lineTo(width - pad, height - pad - rectRadius);
+  ctx.quadraticCurveTo(width - pad, height - pad, width - pad - rectRadius, height - pad);
+  ctx.lineTo(pad + rectRadius, height - pad);
+  ctx.quadraticCurveTo(pad, height - pad, pad, height - pad - rectRadius);
+  ctx.lineTo(pad, pad + rectRadius);
+  ctx.quadraticCurveTo(pad, pad, pad + rectRadius, pad);
+  ctx.closePath();
   ctx.fillStyle = '#23272A';
-  ctx.fillRect(100, blockRectY, 370, blockRectHeight);
+  ctx.fill();
   ctx.filter = 'none';
   ctx.globalAlpha = 1.0;
   ctx.restore();
