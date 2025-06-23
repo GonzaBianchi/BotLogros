@@ -94,7 +94,16 @@ export async function generateAchievementImage({ type, level, title, desc }) {
   ctx.textBaseline = 'middle';
   ctx.fillText((level + 1).toString(), squareX + squareSize / 2, squareY + squareSize / 2);
 
-  // Bloque de texto centrado verticalmente y más junto
+  // --- BLOQUE DE TEXTO A LA DERECHA DEL CUADRADO ---
+  // Prepara líneas: título (grande, color), descripción (más pequeña, gris)
+  const blockLines = [
+    { text: title, font: 'bold 22px sans-serif', color: '#fff' },
+    { text: desc, font: '16px sans-serif', color: '#b9bbbe' }
+  ];
+  // Calcula altura total del bloque
+  const blockHeight = blockLines.length * 26;
+  // Centra verticalmente respecto a la imagen
+  const blockStartY = Math.round((height - blockHeight) / 2);
   ctx.textAlign = 'left';
   let y = blockStartY;
   for (const line of blockLines) {
