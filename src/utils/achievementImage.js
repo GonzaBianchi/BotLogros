@@ -20,22 +20,35 @@ export async function generateAchievementImage({ type, level, title, desc }) {
   try {
     const bgImg = await loadImage('src/assets/banner.jpg');
     ctx.drawImage(bgImg, 0, 0, width, height);
-    // Aplica un blur y oscurece para mejorar contraste
-    ctx.globalAlpha = 0.6;
-    ctx.fillStyle = '#23272A';
-    ctx.fillRect(0, 0, width, height);
-    ctx.globalAlpha = 1.0;
-    // Simula blur: dibuja el fondo varias veces con opacidad baja y desplazamiento
-    for (let dx = -2; dx <= 2; dx++) {
-      for (let dy = -2; dy <= 2; dy++) {
-        if (dx !== 0 || dy !== 0) ctx.drawImage(bgImg, dx, dy, width, height);
-      }
-    }
   } catch (e) {
-    // Si no se encuentra la imagen, usa fondo por defecto
     ctx.fillStyle = '#23272A';
     ctx.fillRect(0, 0, width, height);
   }
+
+  // --- RECTÁNGULO INTERIOR CON BLUR Y OSCURECIDO ---
+  // Calcula el área del bloque de texto
+  const blockLines = [
+    { text: '¡LOGRO DESBLOQUEADO!', font: 'bold 18px sans-serif', color: '#39FF90' },
+    { text: title.replace(/^[^a-zA-Z0-9]+\s*/, ''), font: 'bold 22px sans-serif', color: COLORS[level] || COLORS[0] },
+    { text: desc, font: '16px sans-serif', color: '#b9bbbe' }
+  ];
+  let blockHeight = 0;
+  for (const line of blockLines) {
+    ctx.font = line.font;
+    blockHeight += 26;
+  }
+  const blockStartY = (height - blockHeight) / 2 + 8;
+  const blockRectY = blockStartY - 18;
+  const blockRectHeight = blockHeight + 36;
+  // Dibuja el rectángulo interior con blur
+  ctx.save();
+  ctx.globalAlpha = 0.7;
+  ctx.filter = 'blur(6px)';
+  ctx.fillStyle = '#23272A';
+  ctx.fillRect(100, blockRectY, 370, blockRectHeight);
+  ctx.filter = 'none';
+  ctx.globalAlpha = 1.0;
+  ctx.restore();
 
   // Cuadrado con doble borde (sin relleno)
   const squareX = 30;
@@ -85,25 +98,11 @@ export async function generateAchievementImage({ type, level, title, desc }) {
 
   // Bloque de texto centrado verticalmente y más junto
   ctx.textAlign = 'left';
-  // Calcula el alto total del bloque de texto
-  const blockLines = [
-    { text: '¡LOGRO DESBLOQUEADO!', font: 'bold 18px sans-serif', color: '#39FF90' },
-    { text: title.replace(/^[^a-zA-Z0-9]+\s*/, ''), font: 'bold 22px sans-serif', color: COLORS[level] || COLORS[0] },
-    { text: desc, font: '16px sans-serif', color: '#b9bbbe' }
-  ];
-  let blockHeight = 0;
-  for (const line of blockLines) {
-    ctx.font = line.font;
-    blockHeight += 26; // Espaciado entre líneas reducido
-  }
-  const blockStartY = (height - blockHeight) / 2 + 8;
-
-  // Dibuja el bloque de texto
   let y = blockStartY;
   for (const line of blockLines) {
     ctx.font = line.font;
     ctx.fillStyle = line.color;
-    ctx.fillText(line.text, 110, y, 370);
+    ctx.fillText(line.text, 110, y, 350);
     y += 26;
   }
 
