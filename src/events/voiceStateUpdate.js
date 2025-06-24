@@ -86,6 +86,14 @@ export default {
               files: [{ attachment: imgBuffer, name: 'logro.png' }]
             });
           }
+          // --- Rol por máximo nivel de voice ---
+          if (achievement.achievements.voiceLevel === LEVELS.voice.length) {
+            const maxVoiceRole = newState.guild.roles.cache.get('1387090612062261399');
+            const member = newState.guild.members.cache.get(user.id);
+            if (maxVoiceRole && member && !member.roles.cache.has(maxVoiceRole.id)) {
+              await member.roles.add(maxVoiceRole, 'Alcanzó el máximo logro de voice');
+            }
+          }
         }
         // --- FELICITACIÓN POR 100% DE LOGROS ---
         const achData = achievement.achievements;

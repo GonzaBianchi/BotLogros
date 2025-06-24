@@ -42,6 +42,14 @@ export default {
           files: [{ attachment: imgBuffer, name: 'logro.png' }]
         });
       }
+      // --- Rol por máximo nivel de mensajes ---
+      if (achievement.achievements.messagesLevel === LEVELS.messages.length) {
+        const maxMsgRole = message.guild.roles.cache.get('1387090067738071080');
+        const member = message.guild.members.cache.get(message.author.id);
+        if (maxMsgRole && member && !member.roles.cache.has(maxMsgRole.id)) {
+          await member.roles.add(maxMsgRole, 'Alcanzó el máximo logro de mensajes');
+        }
+      }
     }
     // --- FELICITACIÓN POR 100% DE LOGROS ---
     const achData = achievement.achievements;

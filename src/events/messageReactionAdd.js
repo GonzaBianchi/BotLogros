@@ -44,6 +44,14 @@ export default {
           files: [{ attachment: imgBuffer, name: 'logro.png' }]
         });
       }
+      // --- Rol por máximo nivel de reacciones ---
+      if (achievement.achievements.reactionsLevel === LEVELS.reactions.length) {
+        const maxReactRole = reaction.message.guild.roles.cache.get('1387090466335358996');
+        const member = reaction.message.guild.members.cache.get(user.id);
+        if (maxReactRole && member && !member.roles.cache.has(maxReactRole.id)) {
+          await member.roles.add(maxReactRole, 'Alcanzó el máximo logro de reacciones');
+        }
+      }
     }
     // --- FELICITACIÓN POR 100% DE LOGROS ---
     const achData = achievement.achievements;
